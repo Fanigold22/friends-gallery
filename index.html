@@ -7,15 +7,22 @@
 <style>
 body {
     font-family: Arial, sans-serif;
-    background-color: #f5f5f5; /* light pastel background */
+    background-color: #f5f5f5; /* pastel background */
     color: #333;
     text-align: center;
     padding: 20px;
+    margin: 0;
 }
 
 h1 {
     color: #a8dadc; /* pastel blue */
     margin-bottom: 20px;
+}
+
+input[type="file"] {
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
 }
 
 button {
@@ -41,11 +48,71 @@ button:hover {
     margin-top: 20px;
 }
 
-.gallery img, .gallery video {
+.item-container {
+    position: relative;
+    display: inline-block;
+}
+
+.item-container img, .item-container video {
     max-width: 200px;
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: transform 0.2s;
 }
+
+.item-container img:hover, .item-container video:hover {
+    transform: scale(1.05);
+}
+
+.delete-btn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: #ff6b6b;
+    border: none;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.delete-btn:hover {
+    background: #ff4c4c;
+}
+
+/* Fullscreen modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.9);
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+}
+
+.modal-content {
+    max-width: 95%;
+    max-height: 95%;
+    border-radius: 10px;
+}
+
+.close-modal {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: #fff;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
 </style>
 </head>
 <body>
@@ -56,6 +123,12 @@ button:hover {
 
 <div class="gallery" id="gallery"></div>
 
+<!-- Fullscreen modal -->
+<div class="modal" id="modal">
+    <span class="close-modal" id="closeModal">&times;</span>
+    <div id="modalContentContainer"></div>
+</div>
+
 <script>
 const cloudName = "dtqquczjk"; // replace with your Cloudinary cloud name
 const unsignedPreset = "unsigned_preset"; // replace with your preset name
@@ -63,7 +136,7 @@ const unsignedPreset = "unsigned_preset"; // replace with your preset name
 async function upload() {
     const file = document.getElementById("fileInput").files[0];
     if(!file) return alert("Choose a file!");
-    
+
     const url = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
     const formData = new FormData();
     formData.append("file", file);
@@ -72,17 +145,62 @@ async function upload() {
     const res = await fetch(url, { method: "POST", body: formData });
     const data = await res.json();
 
+    addToGallery(file, data.secure_url);
+}
+
+function addToGallery(file, url) {
     const gallery = document.getElementById("gallery");
+    const container = document.createElement("div");
+    container.className = "item-container";
+
+    let element;
     if(file.type.startsWith("video")) {
-        const video = document.createElement("video");
-        video.src = data.secure_url;
-        video.controls = true;
-        gallery.appendChild(video);
+        element = document.createElement("video");
+        element.src = url;
+        element.controls = true;
     } else {
-        const img = document.createElement("img");
-        img.src = data.secure_url;
-        gallery.appendChild(img);
+        element = document.createElement("img");
+        element.src = url;
     }
+
+    // Click to open fullscreen
+    element.onclick = () => openModal(url, file.type);
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "delete-btn";
+    delBtn.innerText = "X";
+    delBtn.onclick = () => container.remove();
+
+    container.appendChild(element);
+    container.appendChild(delBtn);
+    gallery.appendChild(container);
+}
+
+// Modal logic
+const modal = document.getElementById("modal");
+const modalContentContainer = document.getElementById("modalContentContainer");
+const closeModal = document.getElementById("closeModal");
+
+function openModal(url, type) {
+    modal.style.display = "flex";
+    modalContentContainer.innerHTML = "";
+    let element;
+    if(type.startsWith("video")) {
+        element = document.createElement("video");
+        element.src = url;
+        element.controls = true;
+        element.autoplay = true;
+    } else {
+        element = document.createElement("img");
+        element.src = url;
+    }
+    element.className = "modal-content";
+    modalContentContainer.appendChild(element);
+}
+
+closeModal.onclick = () => modal.style.display = "none";
+modal.onclick = (e) => {
+    if(e.target === modal) modal.style.display = "none";
 }
 </script>
 
