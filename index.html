@@ -137,7 +137,7 @@ async function upload() {
     const file = document.getElementById("fileInput").files[0];
     if(!file) return alert("Choose a file!");
 
-    const url = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
+    const url = `https://api.cloudinary.com/v1_1/${dtqquczjk}/upload`;
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", unsignedPreset);
