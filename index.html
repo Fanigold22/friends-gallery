@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Friends Gallery</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5; /* light pastel background */
+    color: #333;
+    text-align: center;
+    padding: 20px;
+}
+
+h1 {
+    color: #a8dadc; /* pastel blue */
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 8px 15px;
+    margin-left: 10px;
+    background: #ffd6a5; /* soft pastel orange */
+    border: none;
+    border-radius: 5px;
+    color: #333;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #ffe0b2;
+}
+
+.gallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.gallery img, .gallery video {
+    max-width: 200px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+</style>
+</head>
+<body>
+
+<h1>Upload Your Image/Video</h1>
+<input type="file" id="fileInput">
+<button onclick="upload()">Upload</button>
+
+<div class="gallery" id="gallery"></div>
+
+<script>
+const cloudName = "dtqquczjk"; // replace with your Cloudinary cloud name
+const unsignedPreset = "unsigned_preset"; // replace with your preset name
+
+async function upload() {
+    const file = document.getElementById("fileInput").files[0];
+    if(!file) return alert("Choose a file!");
+    
+    const url = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", unsignedPreset);
+
+    const res = await fetch(url, { method: "POST", body: formData });
+    const data = await res.json();
+
+    const gallery = document.getElementById("gallery");
+    if(file.type.startsWith("video")) {
+        const video = document.createElement("video");
+        video.src = data.secure_url;
+        video.controls = true;
+        gallery.appendChild(video);
+    } else {
+        const img = document.createElement("img");
+        img.src = data.secure_url;
+        gallery.appendChild(img);
+    }
+}
+</script>
+
+</body>
+</html>
